@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- 外层圆环 -->
+  <circle cx="150" cy="130" r="48" fill="none" stroke="#C5A55A" stroke-width="1.5" opacity="0.6"/>
+  <!-- 内层圆环 -->
+  <circle cx="150" cy="130" r="38" fill="none" stroke="#C5A55A" stroke-width="0.6" opacity="0.3"/>
+  <!-- 五角星 -->
+  <polygon points="150,88 158,112 184,112 163,127 171,152 150,137 129,152 137,127 116,112 142,112"
+           fill="none" stroke="#C5A55A" stroke-width="0.8" opacity="0.5"/>
+  <!-- 盾形底 -->
+  <path d="M122 148 L122 165 Q122 190 150 205 Q178 190 178 165 L178 148 Z"
+        fill="none" stroke="#C5A55A" stroke-width="1" opacity="0.4"/>
+  <!-- 顶部横条 -->
+  <rect x="130" y="65" width="40" height="14" rx="2" fill="none" stroke="#C5A55A" stroke-width="0.6" opacity="0.3"/>
+  <!-- 底部飘带 -->
+  <path d="M100 210 Q150 220 200 210" fill="none" stroke="#C5A55A" stroke-width="0.5" opacity="0.25"/>
+</svg>
