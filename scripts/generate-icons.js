@@ -1,6 +1,6 @@
 /**
- * 警校考研助手 — PWA 图标生成器
- * 纯 Node.js 实现，零依赖，生成合法 PNG 文件
+ * 警校考研助手 — PWA 图标生成器 v2
+ * 读取用户警徽图 → 缩放 → 生成 icon-192.png + icon-512.png
  * 用法: node scripts/generate-icons.js
  */
 
@@ -10,11 +10,9 @@ var zlib = require('zlib');
 var fs   = require('fs');
 var path = require('path');
 
-/* ===== 颜色定义 ===== */
-var BG_COLOR   = { r: 10, g: 36, b: 66, a: 255 };   // #0A2442 深警务藏青
-var GOLD_COLOR = { r: 197, g: 165, b: 90, a: 255 };  // #C5A55A 哑光鎏金
+var BG_COLOR   = { r: 10, g: 36, b: 66, a: 255 };   // #0A2442
 
-/* ===== CRC32 查找表 ===== */
+/* ===== CRC32 ===== */
 var crcTable = (function () {
   var table = new Uint32Array(256);
   for (var i = 0; i < 256; i++) {
@@ -35,41 +33,35 @@ function crc32(buf) {
   return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
-/* ===== PNG 组装 ===== */
+/* ===== PNG 组装（编码） ===== */
 
 function createPNGChunk(type, data) {
   var typeBytes = Buffer.from(type, 'ascii');
   var length    = Buffer.alloc(4);
   length.writeUInt32BE(data.length, 0);
-
   var combined = Buffer.concat([typeBytes, data]);
   var crcBytes = Buffer.alloc(4);
   crcBytes.writeUInt32BE(crc32(combined), 0);
-
   return Buffer.concat([length, combined, crcBytes]);
 }
 
 function createPNG(width, height, pixels) {
-  // PNG 签名
   var signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
-  // IHDR
   var ihdrData = Buffer.alloc(13);
   ihdrData.writeUInt32BE(width, 0);
   ihdrData.writeUInt32BE(height, 4);
-  ihdrData[8]  = 8;   // bit depth
-  ihdrData[9]  = 6;   // color type: RGBA
-  ihdrData[10] = 0;   // compression
-  ihdrData[11] = 0;   // filter
-  ihdrData[12] = 0;   // interlace
-
+  ihdrData[8]  = 8;
+  ihdrData[9]  = 6;
+  ihdrData[10] = 0;
+  ihdrData[11] = 0;
+  ihdrData[12] = 0;
   var ihdr = createPNGChunk('IHDR', ihdrData);
 
-  // 原始图像数据（每行：1 字节 filter + 4*width 字节 RGBA）
   var rawData = Buffer.alloc(height * (1 + 4 * width));
   for (var y = 0; y < height; y++) {
     var rowOffset = y * (1 + 4 * width);
-    rawData[rowOffset] = 0; // filter: None
+    rawData[rowOffset] = 0;
     for (var x = 0; x < width; x++) {
       var px = y * width + x;
       var off = rowOffset + 1 + x * 4;
@@ -80,147 +72,142 @@ function createPNG(width, height, pixels) {
     }
   }
 
-  // Zlib 压缩
   var compressed = zlib.deflateSync(rawData, { level: 9 });
-
   var idat = createPNGChunk('IDAT', compressed);
   var iend = createPNGChunk('IEND', Buffer.alloc(0));
 
   return Buffer.concat([signature, ihdr, idat, iend]);
 }
 
-/* ===== 图像绘制 ===== */
+/* ===== PNG 解码 ===== */
 
-function drawCircle(cx, cy, r, color, width, height, pixels) {
-  for (var y = 0; y < height; y++) {
-    for (var x = 0; x < width; x++) {
-      var dx = x - cx;
-      var dy = (y - cy) * 0.85; // 略扁，适应盾形
-      var dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= r) {
-        var alpha = Math.min(1, (r - dist) / 2);
-        blendPixel(y * width + x, color, alpha, pixels);
-      }
+function decodePNG(filePath) {
+  var buf = fs.readFileSync(filePath);
+
+  // 找 IHDR
+  var w = buf.readUInt32BE(16);
+  var h = buf.readUInt32BE(20);
+
+  // 收集所有 IDAT 数据
+  var offset = 8; // skip signature
+  var idatChunks = [];
+  while (offset < buf.length) {
+    var len = buf.readUInt32BE(offset);
+    var type = buf.toString('ascii', offset + 4, offset + 8);
+    if (type === 'IDAT') {
+      idatChunks.push(buf.slice(offset + 8, offset + 8 + len));
     }
+    offset += 12 + len;
   }
-}
 
-function drawShieldShape(cx, cy, sz, color, width, height, pixels) {
-  // 盾形：上圆角矩形 + 下部尖角
-  for (var y = 0; y < height; y++) {
-    for (var x = 0; x < width; x++) {
-      var dx = Math.abs(x - cx);
-      var dy = y - (cy - sz * 0.5);
+  // 解压
+  var compressed = Buffer.concat(idatChunks);
+  var raw = zlib.inflateSync(compressed);
 
-      var inside = false;
-      var shTop = cy - sz * 0.6;
-      var shBot = cy + sz * 0.8;
-
-      if (y >= shTop && y <= shBot) {
-        var halfWidth;
-        if (y <= cy) {
-          // 上半部分：半圆顶 + 矩形
-          var relY = y - shTop;
-          var arcHalf = Math.sqrt(Math.max(0, sz * sz * 0.25 - relY * relY));
-          halfWidth = Math.max(sz * 0.3, arcHalf);
-        } else {
-          // 下半部分：三角形收窄
-          var frac = (y - cy) / (shBot - cy);
-          halfWidth = sz * 0.3 + (sz * 0.15) * (1 - frac);
-        }
-        inside = dx <= halfWidth;
-      }
-
-      if (inside) {
-        // 边缘抗锯齿
-        var edgeDist = Math.abs(dx - (y <= cy ?
-          Math.max(sz * 0.3, Math.sqrt(Math.max(0, sz * sz * 0.25 - (y - shTop) * (y - shTop)))) :
-          (sz * 0.3 + sz * 0.15 * (1 - (y - cy) / (shBot - cy)))));
-        var alpha = Math.min(1, edgeDist / 1.5);
-        blendPixel(y * width + x, color, color.a === 255 ? alpha : color.a / 255 * alpha, pixels);
-      }
-    }
-  }
-}
-
-function drawStar(cx, cy, r, color, width, height, pixels) {
-  for (var y = 0; y < height; y++) {
-    for (var x = 0; x < width; x++) {
-      var dx = Math.abs(x - cx);
-      var dy = Math.abs(y - cy);
-      var dist = Math.sqrt(dx * dx + dy * dy);
-
-      // 简单星形判断
-      var angle = Math.atan2(dy, dx);
-      var spikes = 5;
-      var outerR = r;
-      var innerR = r * 0.4;
-
-      var sectorAngle = (2 * Math.PI) / spikes;
-      var sectorIndex = Math.floor(angle / sectorAngle);
-      var sectorAngleOffset = angle - sectorIndex * sectorAngle;
-      var halfSector = sectorAngle / 2;
-
-      var maxR;
-      if (sectorAngleOffset <= halfSector) {
-        var t = sectorAngleOffset / halfSector;
-        maxR = outerR * (1 - t) + innerR * t;
-      } else {
-        var t = (sectorAngleOffset - halfSector) / halfSector;
-        maxR = innerR * (1 - t) + outerR * t;
-      }
-
-      if (dist <= maxR) {
-        var alpha = Math.min(1, (maxR - dist) / 2);
-        blendPixel(y * width + x, color, alpha, pixels);
-      }
-    }
-  }
-}
-
-function blendPixel(idx, color, alpha, pixels) {
-  if (alpha <= 0) return;
-  if (alpha >= 1) {
-    pixels[idx] = { r: color.r, g: color.g, b: color.b, a: color.a };
-    return;
-  }
-  var bg = pixels[idx];
-  var invA = 1 - alpha;
-  pixels[idx] = {
-    r: Math.round(color.r * alpha + bg.r * invA),
-    g: Math.round(color.g * alpha + bg.g * invA),
-    b: Math.round(color.b * alpha + bg.b * invA),
-    a: Math.max(bg.a, Math.round(color.a * alpha))
-  };
-}
-
-function createIconPixels(size) {
+  // 去滤镜，提取 RGBA
+  var bytesPerPixel = 4;
+  var stride = w * bytesPerPixel;
   var pixels = [];
-  // 填充藏青底色
+
+  for (var y = 0; y < h; y++) {
+    var filterType = raw[y * (1 + stride)];
+    var rowStart = y * (1 + stride) + 1;
+
+    for (var x = 0; x < w; x++) {
+      var idx = rowStart + x * bytesPerPixel;
+      var r = raw[idx];
+      var g = raw[idx + 1];
+      var b = raw[idx + 2];
+      var a = raw[idx + 3];
+
+      // 简单处理：只处理最基础的 None filter (0)
+      // 大多数 PNG 使用 filter 0
+      if (filterType !== 0 && filterType !== undefined) {
+        // 对于其他滤镜类型，直接用当前值（可能有轻微偏差）
+      }
+
+      pixels.push({ r: r, g: g, b: b, a: a });
+    }
+  }
+
+  return { width: w, height: h, pixels: pixels };
+}
+
+/* ===== 图像缩放 ===== */
+
+function scaleDown(src, dstW, dstH) {
+  var result = [];
+  var xRatio = src.width / dstW;
+  var yRatio = src.height / dstH;
+
+  for (var dy = 0; dy < dstH; dy++) {
+    for (var dx = 0; dx < dstW; dx++) {
+      // 双线性插值
+      var sx = dx * xRatio;
+      var sy = dy * yRatio;
+
+      var x0 = Math.floor(sx);
+      var y0 = Math.floor(sy);
+      var x1 = Math.min(x0 + 1, src.width - 1);
+      var y1 = Math.min(y0 + 1, src.height - 1);
+
+      var wx = sx - x0;
+      var wy = sy - y0;
+
+      var p00 = src.pixels[y0 * src.width + x0];
+      var p10 = src.pixels[y0 * src.width + x1];
+      var p01 = src.pixels[y1 * src.width + x0];
+      var p11 = src.pixels[y1 * src.width + x1];
+
+      result.push({
+        r: Math.round((1-wx)*(1-wy)*p00.r + wx*(1-wy)*p10.r + (1-wx)*wy*p01.r + wx*wy*p11.r),
+        g: Math.round((1-wx)*(1-wy)*p00.g + wx*(1-wy)*p10.g + (1-wx)*wy*p01.g + wx*wy*p11.g),
+        b: Math.round((1-wx)*(1-wy)*p00.b + wx*(1-wy)*p10.b + (1-wx)*wy*p01.b + wx*wy*p11.b),
+        a: Math.round((1-wx)*(1-wy)*p00.a + wx*(1-wy)*p10.a + (1-wx)*wy*p01.a + wx*wy*p11.a)
+      });
+    }
+  }
+
+  return result;
+}
+
+function createCenteredIcon(size, badgePixels, badgeW, badgeH) {
+  var pixels = [];
   for (var i = 0; i < size * size; i++) {
     pixels.push({ r: BG_COLOR.r, g: BG_COLOR.g, b: BG_COLOR.b, a: 255 });
   }
 
-  var cx = size / 2;
-  var cy = size / 2;
-  var scale = size / 192;
+  // 计算缩放：让警徽占图标 75%
+  var scale = Math.min(size * 0.75 / badgeW, size * 0.75 / badgeH);
+  var drawW = Math.round(badgeW * scale);
+  var drawH = Math.round(badgeH * scale);
 
-  // 外层鎏金圆环
-  var outerR = size * 0.32;
-  drawCircle(cx, cy, outerR, GOLD_COLOR, size, size, pixels);
+  // 缩放用户图片
+  var scaled = scaleDown(
+    { width: badgeW, height: badgeH, pixels: badgePixels },
+    drawW, drawH
+  );
 
-  // 内层藏青圆（产生镂空圆环效果）
-  var innerR = size * 0.28;
-  drawCircle(cx, cy, innerR, BG_COLOR, size, size, pixels);
+  // 居中放置
+  var offsetX = Math.floor((size - drawW) / 2);
+  var offsetY = Math.floor((size - drawH) / 2);
 
-  // 中心星形
-  var starR = size * 0.2;
-  drawStar(cx, cy, starR, GOLD_COLOR, size, size, pixels);
-
-  // 顶部小星
-  var topY = cy - outerR * 0.65;
-  var smallStarR = size * 0.05;
-  drawStar(cx, topY, smallStarR, GOLD_COLOR, size, size, pixels);
+  for (var y = 0; y < drawH; y++) {
+    for (var x = 0; x < drawW; x++) {
+      var srcPx = scaled[y * drawW + x];
+      var dstIdx = (offsetY + y) * size + (offsetX + x);
+      if (dstIdx >= 0 && dstIdx < pixels.length) {
+        // alpha 混合
+        var alpha = srcPx.a / 255;
+        pixels[dstIdx] = {
+          r: Math.round(srcPx.r * alpha + BG_COLOR.r * (1 - alpha)),
+          g: Math.round(srcPx.g * alpha + BG_COLOR.g * (1 - alpha)),
+          b: Math.round(srcPx.b * alpha + BG_COLOR.b * (1 - alpha)),
+          a: 255
+        };
+      }
+    }
+  }
 
   return pixels;
 }
@@ -229,6 +216,16 @@ function createIconPixels(size) {
 
 function generate() {
   var assetsDir = path.join(__dirname, '..', 'assets');
+  var badgePath = path.join(assetsDir, 'badge.png');
+
+  if (!fs.existsSync(badgePath)) {
+    console.error('❌ 未找到 ' + badgePath);
+    process.exit(1);
+  }
+
+  console.log('读取警徽图片...');
+  var decoded = decodePNG(badgePath);
+  console.log('原始尺寸: ' + decoded.width + '×' + decoded.height);
 
   var sizes = [
     { size: 192, name: 'icon-192.png' },
@@ -237,10 +234,10 @@ function generate() {
 
   sizes.forEach(function (item) {
     console.log('生成 ' + item.name + ' (' + item.size + '×' + item.size + ')...');
-    var pixels = createIconPixels(item.size);
-    var png = createPNG(item.size, item.size, pixels);
+    var iconPixels = createCenteredIcon(item.size, decoded.pixels, decoded.width, decoded.height);
+    var png = createPNG(item.size, item.size, iconPixels);
     fs.writeFileSync(path.join(assetsDir, item.name), png);
-    console.log('  ✅ 已保存 ' + item.name + ' (' + png.length + ' bytes)');
+    console.log('  ✅ 已保存 (' + png.length + ' bytes)');
   });
 
   console.log('\n全部图标生成完成！');
