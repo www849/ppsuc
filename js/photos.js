@@ -10,13 +10,12 @@ var Photos = (function () {
   var pageSize = 20;
 
   /* ---- DOM 引用 ---- */
-  var gridEl, uploadBtn, fileInput, viewerEl;
+  var gridEl, fileInput, viewerEl;
 
   function cacheDOM() {
-    gridEl     = document.getElementById('photos-grid');
-    uploadBtn  = document.getElementById('btn-upload-photo');
-    fileInput  = document.getElementById('photo-file-input');
-    viewerEl   = document.getElementById('photo-viewer');
+    gridEl    = document.getElementById('photos-grid');
+    fileInput = document.getElementById('photo-file-input');
+    viewerEl  = document.getElementById('photo-viewer');
   }
 
   /* ---- 渲染 ---- */
@@ -98,11 +97,6 @@ var Photos = (function () {
   }
 
   /* ---- 上传 ---- */
-
-  function triggerUpload() {
-    if (!fileInput) cacheDOM();
-    if (fileInput) fileInput.click();
-  }
 
   function handleFileSelected(e) {
     var file = e.target.files[0];
@@ -189,10 +183,7 @@ var Photos = (function () {
   /* ---- 事件绑定 ---- */
 
   function bindEvents() {
-    if (!uploadBtn) cacheDOM();
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', triggerUpload);
-    }
+    if (!fileInput) cacheDOM();
     if (fileInput) {
       fileInput.addEventListener('change', handleFileSelected);
     }

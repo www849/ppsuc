@@ -12,6 +12,13 @@
 </head>
 <body>
 
+  <!-- ===== 安装提示条 ===== -->
+  <div class="install-banner" id="install-banner" style="display:none;">
+    <span>📱 点击安装到桌面，享受全屏 App 体验</span>
+    <button class="install-btn" id="btn-install">安装</button>
+    <button class="install-close" id="btn-install-close">✕</button>
+  </div>
+
   <!-- ===== 应用头部 ===== -->
   <header class="app-header">
     <img class="app-badge" src="assets/badge.png" alt="警徽" onerror="this.style.display='none'">
@@ -161,8 +168,10 @@
       <div class="photos-grid" id="photos-grid">
         <p class="card-hint" style="text-align:center;padding:40px 0;">加载中…</p>
       </div>
-      <button class="btn-gold primary" id="btn-upload-photo" style="margin-top:12px;">📷 上传照片</button>
-      <input type="file" id="photo-file-input" accept="image/*" capture="environment" style="display:none;">
+      <label class="btn-gold primary upload-btn" for="photo-file-input" style="margin-top:12px;">
+        📷 拍照 / 上传照片
+        <input type="file" id="photo-file-input" accept="image/*" capture="environment">
+      </label>
     </section>
 
   </main>

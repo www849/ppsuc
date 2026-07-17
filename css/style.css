@@ -713,6 +713,50 @@ body {
   animation: fadeIn 300ms ease;
 }
 
+/* ----- PWA 安装提示条 ----- */
+.install-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  background: var(--color-bg-dark);
+  border-bottom: 1px solid var(--color-gold);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.install-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-gold);
+  color: var(--color-bg);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+.install-btn:active {
+  opacity: 0.85;
+}
+
+.install-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--text-tertiary);
+  font-size: 16px;
+  cursor: pointer;
+}
+
 /* ----- 警徽 ----- */
 .app-badge {
   display: block;
@@ -720,6 +764,21 @@ body {
   height: 64px;
   margin: 0 auto 8px;
   object-fit: contain;
+}
+
+/* 上传按钮（label 包裹 input） */
+.upload-btn {
+  cursor: pointer;
+  text-align: center;
+  display: block;
+}
+.upload-btn input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
 }
 
 /* ===== 学习历程相册 ===== */

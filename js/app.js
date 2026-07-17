@@ -162,6 +162,82 @@ var App = (function () {
   }
 
   /**
+   * PWA 安装提示
+   */
+  var deferredPrompt = null;
+
+  function initPWAInstall() {
+    var banner     = document.getElementById('install-banner');
+    var btnInstall = document.getElementById('btn-install');
+    var btnClose   = document.getElementById('btn-install-close');
+
+    // 检测是否已在 standalone 模式
+    if (window.matchMedia('(display-mode: standalone)').matches ||
+        navigator.standalone) {
+      // 已经是 App 模式，不显示安装提示
+      if (banner) banner.style.display = 'none';
+      return;
+    }
+
+    // 监听安装事件
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (banner) banner.style.display = 'flex';
+    });
+
+    // 安装按钮
+    if (btnInstall) {
+      btnInstall.addEventListener('click', function () {
+        if (!deferredPrompt) {
+          alert('请通过浏览器菜单 → "添加到主屏幕" 安装');
+          return;
+        }
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function (result) {
+          if (result.outcome === 'accepted') {
+            if (banner) banner.style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      });
+    }
+
+    // 关闭按钮
+    if (btnClose && banner) {
+      btnClose.addEventListener('click', function () {
+        banner.style.display = 'none';
+      });
+    }
+
+    // iOS Safari 不支持 beforeinstallprompt，直接显示引导
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS && !navigator.standalone && banner) {
+      banner.style.display = 'flex';
+      if (btnInstall) btnInstall.textContent = '如何安装';
+      if (btnInstall) {
+        btnInstall.addEventListener('click', function () {
+          alert('1. 点底部 Safari 分享按钮\n2. 滑动找到「添加到主屏幕」\n3. 点右上角「添加」');
+        });
+      }
+    }
+
+    // Android/鸿蒙：如果一段时间没弹出 beforeinstallprompt，主动显示
+    setTimeout(function () {
+      if (!deferredPrompt && banner && banner.style.display === 'none' &&
+          !window.matchMedia('(display-mode: standalone)').matches) {
+        banner.style.display = 'flex';
+        if (btnInstall) btnInstall.textContent = '安装';
+        if (btnInstall) {
+          btnInstall.onclick = function () {
+            alert('请通过浏览器菜单 → "添加至桌面" 安装\n\nChrome: 点右上 ⋮ → 添加到主屏幕\n华为浏览器: 点底部中间 ≡ → 添加至桌面');
+          };
+        }
+      }
+    }, 3000);
+  }
+
+  /**
    * 注册 Service Worker
    */
   function registerSW() {
@@ -210,6 +286,9 @@ var App = (function () {
 
     // 注册 Service Worker（非阻塞）
     registerSW();
+
+    // PWA 安装引导
+    initPWAInstall();
 
     console.log('[App] 应用初始化完成');
   }
