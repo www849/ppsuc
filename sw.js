@@ -16,6 +16,8 @@ var STATIC_FILES = [
   '/js/plans.js',
   '/js/notifications.js',
   '/js/checkin.js',
+  '/js/photos.js',
+  '/assets/badge.png',
   '/assets/icon-192.png',
   '/assets/icon-512.png'
 ];

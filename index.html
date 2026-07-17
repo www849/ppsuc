@@ -14,6 +14,7 @@
 
   <!-- ===== 应用头部 ===== -->
   <header class="app-header">
+    <img class="app-badge" src="assets/badge.png" alt="警徽" onerror="this.style.display='none'">
     <h1 class="app-title">警校考研助手</h1>
     <p class="app-subtitle">忠诚 · 求实 · 勤奋 · 创新</p>
   </header>
@@ -136,17 +137,41 @@
     </button>
     <button class="nav-item" data-tab="schools">
       <span class="nav-icon">🎓</span>
-      <span class="nav-label">目标院校</span>
+      <span class="nav-label">院校</span>
     </button>
     <button class="nav-item" data-tab="checkin">
       <span class="nav-icon">✅</span>
-      <span class="nav-label">学习打卡</span>
+      <span class="nav-label">打卡</span>
     </button>
     <button class="nav-item" data-tab="plans">
       <span class="nav-icon">📋</span>
-      <span class="nav-label">学习计划</span>
+      <span class="nav-label">计划</span>
+    </button>
+    <button class="nav-item" data-tab="photos">
+      <span class="nav-icon">📸</span>
+      <span class="nav-label">历程</span>
     </button>
   </nav>
+
+    <!-- 学习历程 Tab -->
+    <section class="tab-panel" id="panel-photos">
+      <div class="page-header">
+        <h2 class="page-title">学习历程</h2>
+      </div>
+      <div class="photos-grid" id="photos-grid">
+        <p class="card-hint" style="text-align:center;padding:40px 0;">加载中…</p>
+      </div>
+      <button class="btn-gold primary" id="btn-upload-photo" style="margin-top:12px;">📷 上传照片</button>
+      <input type="file" id="photo-file-input" accept="image/*" capture="environment" style="display:none;">
+    </section>
+
+  </main>
+
+  <!-- ===== 图片查看器 ===== -->
+  <div class="viewer-overlay" id="photo-viewer">
+    <span class="viewer-close">✕</span>
+    <img class="viewer-image" src="" alt="">
+  </div>
 
   <!-- ===== 计划表单弹窗 ===== -->
   <div class="form-overlay" id="plan-form-overlay">
@@ -196,6 +221,7 @@
   <script src="js/plans.js"></script>
   <script src="js/notifications.js"></script>
   <script src="js/checkin.js"></script>
+  <script src="js/photos.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

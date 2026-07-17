@@ -1,31 +1,27 @@
 /**
  * 警校考研助手 — IndexedDB 数据库层
- * 数据库名: ppsuc_db, 版本: 1
- * 包含 4 个 Object Store: schools, studyPlans, checkins, settings
+ * 数据库名: ppsuc_db, 版本: 2
+ * 包含 5 个 Object Store: schools, studyPlans, checkins, settings, photos
  */
-const DB = (function () {
+var DB = (function () {
   'use strict';
 
-  const DB_NAME    = 'ppsuc_db';
-  const DB_VERSION = 1;
+  var DB_NAME    = 'ppsuc_db';
+  var DB_VERSION = 2;
 
-  let db = null;
+  var db = null;
 
-  /**
-   * 打开/创建数据库
-   * @returns {Promise<IDBDatabase>}
-   */
   function openDB() {
     return new Promise(function (resolve, reject) {
       if (db) { return resolve(db); }
 
       var request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      // 首次创建或版本升级时触发
       request.onupgradeneeded = function (e) {
         var database = e.target.result;
+        var oldVersion = e.oldVersion;
 
-        // --- schools store ---
+        // --- schools store (v1) ---
         if (!database.objectStoreNames.contains('schools')) {
           var schoolsStore = database.createObjectStore('schools', {
             keyPath: 'id',
@@ -35,7 +31,7 @@ const DB = (function () {
           schoolsStore.createIndex('isFavorite', 'isFavorite', { unique: false });
         }
 
-        // --- studyPlans store ---
+        // --- studyPlans store (v1) ---
         if (!database.objectStoreNames.contains('studyPlans')) {
           var plansStore = database.createObjectStore('studyPlans', {
             keyPath: 'id',
@@ -45,7 +41,7 @@ const DB = (function () {
           plansStore.createIndex('scheduledTime', 'scheduledTime', { unique: false });
         }
 
-        // --- checkins store ---
+        // --- checkins store (v1) ---
         if (!database.objectStoreNames.contains('checkins')) {
           var checkinsStore = database.createObjectStore('checkins', {
             keyPath: 'id',
@@ -54,9 +50,18 @@ const DB = (function () {
           checkinsStore.createIndex('date', 'date', { unique: true });
         }
 
-        // --- settings store ---
+        // --- settings store (v1) ---
         if (!database.objectStoreNames.contains('settings')) {
           database.createObjectStore('settings', { keyPath: 'key' });
+        }
+
+        // --- photos store (v2) ---
+        if (!database.objectStoreNames.contains('photos')) {
+          var photosStore = database.createObjectStore('photos', {
+            keyPath: 'id',
+            autoIncrement: true
+          });
+          photosStore.createIndex('createdAt', 'createdAt', { unique: false });
         }
       };
 
@@ -73,9 +78,6 @@ const DB = (function () {
 
   /* ===== 通用 CRUD 操作 ===== */
 
-  /**
-   * 获取某个 store 的全部记录
-   */
   function getAll(storeName) {
     return openDB().then(function (database) {
       return new Promise(function (resolve, reject) {
@@ -88,9 +90,6 @@ const DB = (function () {
     });
   }
 
-  /**
-   * 根据主键获取单条记录
-   */
   function get(storeName, id) {
     return openDB().then(function (database) {
       return new Promise(function (resolve, reject) {
@@ -103,9 +102,6 @@ const DB = (function () {
     });
   }
 
-  /**
-   * 插入记录，返回新 id
-   */
   function add(storeName, data) {
     return openDB().then(function (database) {
       return new Promise(function (resolve, reject) {
@@ -118,9 +114,6 @@ const DB = (function () {
     });
   }
 
-  /**
-   * 更新记录（替换整条）
-   */
   function put(storeName, data) {
     return openDB().then(function (database) {
       return new Promise(function (resolve, reject) {
@@ -133,9 +126,6 @@ const DB = (function () {
     });
   }
 
-  /**
-   * 删除记录
-   */
   function remove(storeName, id) {
     return openDB().then(function (database) {
       return new Promise(function (resolve, reject) {
@@ -148,9 +138,6 @@ const DB = (function () {
     });
   }
 
-  /**
-   * 根据索引查询
-   */
   function getByIndex(storeName, indexName, value) {
     return openDB().then(function (database) {
       return new Promise(function (resolve, reject) {
@@ -164,27 +151,18 @@ const DB = (function () {
     });
   }
 
-  /**
-   * 获取 settings 值
-   */
   function getSetting(key) {
     return get('settings', key).then(function (row) {
       return row ? row.value : null;
     });
   }
 
-  /**
-   * 写入 settings 值
-   */
   function setSetting(key, value) {
     return put('settings', { key: key, value: value });
   }
 
   /* ===== 预置数据 ===== */
 
-  /**
-   * 预置院校数据（仅在数据库为空时插入）
-   */
   function seedSchools() {
     return getAll('schools').then(function (existing) {
       if (existing && existing.length > 0) {
@@ -251,7 +229,6 @@ const DB = (function () {
         }
       ];
 
-      // 逐条插入
       var tx = db.transaction('schools', 'readwrite');
       var store = tx.objectStore('schools');
       schools.forEach(function (school) {

@@ -151,6 +151,9 @@ var App = (function () {
     if (typeof Checkin !== 'undefined' && Checkin.init) {
       Checkin.init();
     }
+    if (typeof Photos !== 'undefined' && Photos.init) {
+      Photos.init();
+    }
     // 初始加载首页数据
     refreshHome();
 
