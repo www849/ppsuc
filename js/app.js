@@ -246,7 +246,7 @@ var App = (function () {
       return;
     }
 
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(function (reg) {
         console.log('[App] Service Worker 已注册: ' + reg.scope);
 
