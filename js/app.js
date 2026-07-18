@@ -1,6 +1,6 @@
 /**
  * 警校考研助手 — 应用主控
- * 负责：Tab 导航切换、应用初始化、模块协调
+ * 负责：Tab 导航切换、应用初始化、模块协调、PWA 安装
  */
 var App = (function () {
   'use strict';
@@ -33,7 +33,7 @@ var App = (function () {
   }
 
   /**
-   * 刷新首页内容（由其他模块调用）
+   * 刷新首页内容
    */
   function refreshHome() {
     // 刷新收藏院校列表
@@ -100,7 +100,6 @@ var App = (function () {
     if (plansContainer) {
       DB.getAll('studyPlans').then(function (plans) {
         var active = plans.filter(function (p) { return p.isActive; });
-        // 按时间排序
         active.sort(function (a, b) { return (a.scheduledTime || '').localeCompare(b.scheduledTime || ''); });
 
         if (active.length === 0) {
@@ -123,7 +122,7 @@ var App = (function () {
             '</div>';
         });
         if (active.length > 5) {
-          html += '<p class="card-hint" style="margin-top:8px;">…还有 ' + (active.length - 5) + ' 项计划</p>';
+          html += '<p class="card-hint" style="margin-top:8px;">...还有 ' + (active.length - 5) + ' 项计划</p>';
         }
         plansContainer.innerHTML = html;
       }).catch(function (err) {
@@ -162,7 +161,7 @@ var App = (function () {
   }
 
   /**
-   * PWA 安装提示
+   * PWA 安装提示 + 诊断
    */
   var deferredPrompt = null;
 
@@ -170,31 +169,90 @@ var App = (function () {
     var banner     = document.getElementById('install-banner');
     var btnInstall = document.getElementById('btn-install');
     var btnClose   = document.getElementById('btn-install-close');
+    var debugEl    = document.getElementById('pwa-debug');
 
-    // 检测是否已在 standalone 模式
-    if (window.matchMedia('(display-mode: standalone)').matches ||
-        navigator.standalone) {
-      // 已经是 App 模式，不显示安装提示
-      if (banner) banner.style.display = 'none';
-      return;
+    // 诊断日志
+    var diag = [];
+    function updateDebug() {
+      if (debugEl) debugEl.innerHTML = diag.map(function (s) { return '<div style="margin:2px 0;font-size:12px;">' + s + '</div>'; }).join('');
+    }
+    function dlog(icon, msg) { diag.push(icon + ' ' + msg); updateDebug(); }
+
+    // 1. HTTPS
+    if (location.protocol === 'https:') {
+      dlog('✅', 'HTTPS 正常');
+    } else {
+      dlog('❌', '不是 HTTPS，无法安装 PWA');
     }
 
-    // 监听安装事件
+    // 2. display-mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      dlog('📱', '已在独立 App 模式');
+      if (banner) banner.style.display = 'none';
+      if (debugEl) debugEl.parentElement.style.display = 'none';
+      return;
+    }
+    dlog('ℹ️', '浏览器模式 (非 App)');
+
+    // 3. Manifest
+    var manifestLink = document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+      var mHref = manifestLink.href;
+      dlog('📄', 'Manifest 路径: ' + mHref);
+      fetch(mHref).then(function (r) {
+        if (r.ok) {
+          dlog('✅', 'Manifest 加载成功');
+        } else {
+          dlog('❌', 'Manifest 加载失败 HTTP ' + r.status);
+        }
+      }).catch(function () {
+        dlog('❌', 'Manifest 请求网络错误');
+      });
+    } else {
+      dlog('❌', '缺少 manifest 标签');
+    }
+
+    // 4. Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        if (regs.length > 0) {
+          dlog('✅', 'SW 已注册 scope=' + regs[0].scope);
+        } else {
+          dlog('⚠️', 'SW 未注册，尝试注册...');
+          navigator.serviceWorker.register('./sw.js').then(function (reg) {
+            dlog('✅', 'SW 注册成功 scope=' + reg.scope);
+          }).catch(function (err) {
+            dlog('❌', 'SW 注册失败: ' + err.message);
+          });
+        }
+      });
+    } else {
+      dlog('❌', '浏览器不支持 SW');
+    }
+
+    // 5. beforeinstallprompt
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferredPrompt = e;
+      dlog('🎉', 'Chrome 触发安装事件！点击安装');
       if (banner) banner.style.display = 'flex';
+    });
+
+    window.addEventListener('appinstalled', function () {
+      dlog('✅', '安装成功！');
     });
 
     // 安装按钮
     if (btnInstall) {
       btnInstall.addEventListener('click', function () {
         if (!deferredPrompt) {
-          alert('请通过浏览器菜单 → "添加到主屏幕" 安装');
+          dlog('ℹ️', 'deferredPrompt 未触发');
+          alert('暂未满足自动安装条件。\n\n请尝试:\n1. 清除浏览器缓存\n2. 等几分钟刷新\n3. Chrome 菜单→添加到主屏幕');
           return;
         }
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(function (result) {
+          dlog('📝', '用户选择: ' + result.outcome);
           if (result.outcome === 'accepted') {
             if (banner) banner.style.display = 'none';
           }
@@ -210,27 +268,29 @@ var App = (function () {
       });
     }
 
-    // iOS Safari 不支持 beforeinstallprompt，直接显示引导
+    // iOS
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS && !navigator.standalone && banner) {
+      dlog('🍎', 'iOS 设备');
       banner.style.display = 'flex';
-      if (btnInstall) btnInstall.textContent = '如何安装';
       if (btnInstall) {
+        btnInstall.textContent = '如何安装';
         btnInstall.addEventListener('click', function () {
           alert('1. 点底部 Safari 分享按钮\n2. 滑动找到「添加到主屏幕」\n3. 点右上角「添加」');
         });
       }
     }
 
-    // Android/鸿蒙：如果一段时间没弹出 beforeinstallprompt，主动显示
+    // 3 秒后如果还没触发 beforeinstallprompt
     setTimeout(function () {
+      dlog('⏳', '3秒检测完毕。如无 🎉 则未触发安装事件');
       if (!deferredPrompt && banner && banner.style.display === 'none' &&
           !window.matchMedia('(display-mode: standalone)').matches) {
         banner.style.display = 'flex';
-        if (btnInstall) btnInstall.textContent = '安装';
         if (btnInstall) {
+          btnInstall.textContent = '安装';
           btnInstall.onclick = function () {
-            alert('请通过浏览器菜单 → "添加至桌面" 安装\n\nChrome: 点右上 ⋮ → 添加到主屏幕\n华为浏览器: 点底部中间 ≡ → 添加至桌面');
+            alert('请通过浏览器菜单安装:\n\nChrome: 点右上 ⋮ → 添加到主屏幕\n华为浏览器: 点底部中间 ≡ → 添加至桌面');
           };
         }
       }
@@ -250,12 +310,11 @@ var App = (function () {
       .then(function (reg) {
         console.log('[App] Service Worker 已注册: ' + reg.scope);
 
-        // 检测更新
         reg.addEventListener('updatefound', function () {
           var newWorker = reg.installing;
           newWorker.addEventListener('statechange', function () {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[App] 新版本可用，刷新页面以更新');
+              console.log('[App] 新版本可用');
             }
           });
         });
@@ -284,16 +343,12 @@ var App = (function () {
         console.error('[App] 数据库初始化失败:', err);
       });
 
-    // 注册 Service Worker（非阻塞）
     registerSW();
-
-    // PWA 安装引导
     initPWAInstall();
 
     console.log('[App] 应用初始化完成');
   }
 
-  // DOM 加载完成后初始化
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
