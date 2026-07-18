@@ -5,21 +5,21 @@
 
 var CACHE_NAME = 'ppsuc-v1';
 var STATIC_FILES = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/manifest.json',
-  '/js/app.js',
-  '/js/db.js',
-  '/js/schools.js',
-  '/js/countdown.js',
-  '/js/plans.js',
-  '/js/notifications.js',
-  '/js/checkin.js',
-  '/js/photos.js',
-  '/assets/badge.png',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png'
+  './',
+  './index.html',
+  './css/style.css',
+  './manifest.json',
+  './js/app.js',
+  './js/db.js',
+  './js/schools.js',
+  './js/countdown.js',
+  './js/plans.js',
+  './js/notifications.js',
+  './js/checkin.js',
+  './js/photos.js',
+  './assets/badge.png',
+  './assets/icon-192.png',
+  './assets/icon-512.png'
 ];
 
 /* ---- 安装：预缓存所有静态资源 ---- */
@@ -88,7 +88,7 @@ self.addEventListener('fetch', function (event) {
       }).catch(function () {
         // 网络失败，返回离线页面（仅对导航请求）
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          return caches.match('./index.html');
         }
         // 其他请求静默失败
       });
