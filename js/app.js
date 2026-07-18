@@ -9,9 +9,6 @@ var App = (function () {
   var navItems  = document.querySelectorAll('.nav-item');
   var tabPanels = document.querySelectorAll('.tab-panel');
 
-  /**
-   * 切换到指定 Tab
-   */
   function switchTab(tabName) {
     navItems.forEach(function (item) {
       item.classList.toggle('active', item.dataset.tab === tabName);
@@ -21,9 +18,6 @@ var App = (function () {
     });
   }
 
-  /**
-   * 绑定导航点击事件
-   */
   function bindNavigation() {
     navItems.forEach(function (item) {
       item.addEventListener('click', function () {
@@ -32,21 +26,15 @@ var App = (function () {
     });
   }
 
-  /**
-   * 刷新首页内容
-   */
   function refreshHome() {
-    // 刷新收藏院校列表
     var favContainer = document.getElementById('home-favorites');
     if (favContainer) {
       DB.getAll('schools').then(function (schools) {
         var favorites = schools.filter(function (s) { return s.isFavorite; });
-
         if (favorites.length === 0) {
           favContainer.innerHTML = '<p class="card-hint">暂未收藏院校，去「目标院校」看看吧</p>';
           return;
         }
-
         var html = '';
         favorites.forEach(function (s) {
           html +=
@@ -61,7 +49,6 @@ var App = (function () {
       });
     }
 
-    // 刷新今日打卡状态
     var checkinStatusEl = document.getElementById('home-checkin-status');
     if (checkinStatusEl) {
       var tk = dateKey();
@@ -69,17 +56,12 @@ var App = (function () {
         var record = (results && results.length > 0) ? results[0] : null;
         var CHECKIN_KEYS = ['politics', 'english', 'math', 'specialized', 'physical'];
         var CHECKIN_NAMES = { politics: '政治', english: '英语', math: '数学', specialized: '专业课', physical: '体能训练' };
-
         var total = CHECKIN_KEYS.length;
         var done = 0;
         CHECKIN_KEYS.forEach(function (k) { if (record && record[k]) done++; });
-
         var html = '<div style="display:flex;align-items:center;gap:12px;">';
         html += '<span style="font-size:28px;font-weight:700;color:var(--color-gold);">' + done + '/' + total + '</span>';
-        html += '<span style="font-size:12px;color:var(--text-tertiary);">项已完成</span>';
-        html += '</div>';
-
-        // 单项状态
+        html += '<span style="font-size:12px;color:var(--text-tertiary);">项已完成</span></div>';
         html += '<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">';
         CHECKIN_KEYS.forEach(function (k) {
           var checked = (record && record[k]);
@@ -88,30 +70,22 @@ var App = (function () {
             '">' + CHECKIN_NAMES[k] + (checked ? ' ✓' : '') + '</span>';
         });
         html += '</div>';
-
         checkinStatusEl.innerHTML = html;
       }).catch(function () {
         checkinStatusEl.innerHTML = '<p class="card-hint">加载失败</p>';
       });
     }
 
-    // 刷新今日计划预览
     var plansContainer = document.getElementById('home-plans');
     if (plansContainer) {
       DB.getAll('studyPlans').then(function (plans) {
         var active = plans.filter(function (p) { return p.isActive; });
         active.sort(function (a, b) { return (a.scheduledTime || '').localeCompare(b.scheduledTime || ''); });
-
         if (active.length === 0) {
           plansContainer.innerHTML = '<p class="card-hint">暂无学习计划，去「学习计划」添加吧</p>';
           return;
         }
-
-        var subjectNames = {
-          'politics': '政治', 'english': '英语',
-          'math': '数学', 'specialized': '专业课'
-        };
-
+        var subjectNames = { 'politics': '政治', 'english': '英语', 'math': '数学', 'specialized': '专业课' };
         var html = '';
         active.slice(0, 5).forEach(function (p) {
           html +=
@@ -131,38 +105,20 @@ var App = (function () {
     }
   }
 
-  /**
-   * 初始化所有模块
-   */
   function initModules() {
-    if (typeof Schools !== 'undefined' && Schools.init) {
-      Schools.init();
-    }
-    if (typeof Countdown !== 'undefined' && Countdown.init) {
-      Countdown.init();
-    }
-    if (typeof Plans !== 'undefined' && Plans.init) {
-      Plans.init();
-    }
-    if (typeof Notifications !== 'undefined' && Notifications.init) {
-      Notifications.init();
-    }
-    if (typeof Checkin !== 'undefined' && Checkin.init) {
-      Checkin.init();
-    }
-    if (typeof Photos !== 'undefined' && Photos.init) {
-      Photos.init();
-    }
-    // 初始加载首页数据
+    if (typeof Schools !== 'undefined' && Schools.init) Schools.init();
+    if (typeof Countdown !== 'undefined' && Countdown.init) Countdown.init();
+    if (typeof Plans !== 'undefined' && Plans.init) Plans.init();
+    if (typeof Notifications !== 'undefined' && Notifications.init) Notifications.init();
+    if (typeof Checkin !== 'undefined' && Checkin.init) Checkin.init();
+    if (typeof Photos !== 'undefined' && Photos.init) Photos.init();
     refreshHome();
-
-    // 每次切换到首页时刷新
     document.querySelector('.nav-item[data-tab="home"]').addEventListener('click', refreshHome);
   }
 
-  /**
-   * PWA 安装提示 + 诊断
-   */
+  /* ================================================================
+   * PWA 安装逻辑
+   * ================================================================ */
   var deferredPrompt = null;
 
   function initPWAInstall() {
@@ -171,22 +127,20 @@ var App = (function () {
     var btnClose   = document.getElementById('btn-install-close');
     var debugEl    = document.getElementById('pwa-debug');
 
-    // 诊断日志
+    /* ---- 诊断 ---- */
     var diag = [];
     function updateDebug() {
       if (debugEl) debugEl.innerHTML = diag.map(function (s) { return '<div style="margin:2px 0;font-size:12px;">' + s + '</div>'; }).join('');
     }
     function dlog(icon, msg) { diag.push(icon + ' ' + msg); updateDebug(); }
 
-    // 1. HTTPS
     if (location.protocol === 'https:') {
       dlog('✅', 'HTTPS 正常');
     } else {
       dlog('❌', '不是 HTTPS，无法安装 PWA');
     }
 
-    // 2. display-mode
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
       dlog('📱', '已在独立 App 模式');
       if (banner) banner.style.display = 'none';
       if (debugEl) debugEl.parentElement.style.display = 'none';
@@ -194,25 +148,19 @@ var App = (function () {
     }
     dlog('ℹ️', '浏览器模式 (非 App)');
 
-    // 3. Manifest
     var manifestLink = document.querySelector('link[rel="manifest"]');
     if (manifestLink) {
       var mHref = manifestLink.href;
-      dlog('📄', 'Manifest 路径: ' + mHref);
+      dlog('📄', 'Manifest: ' + mHref);
       fetch(mHref).then(function (r) {
-        if (r.ok) {
-          dlog('✅', 'Manifest 加载成功');
-        } else {
-          dlog('❌', 'Manifest 加载失败 HTTP ' + r.status);
-        }
+        dlog(r.ok ? '✅' : '❌', r.ok ? 'Manifest 加载成功' : 'Manifest HTTP ' + r.status);
       }).catch(function () {
-        dlog('❌', 'Manifest 请求网络错误');
+        dlog('❌', 'Manifest 请求失败');
       });
     } else {
       dlog('❌', '缺少 manifest 标签');
     }
 
-    // 4. Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function (regs) {
         if (regs.length > 0) {
@@ -230,86 +178,69 @@ var App = (function () {
       dlog('❌', '浏览器不支持 SW');
     }
 
-    // 5. beforeinstallprompt
+    /* ---- beforeinstallprompt ---- */
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferredPrompt = e;
-      dlog('🎉', 'Chrome 触发安装事件！点击安装');
+      dlog('🎉', 'Chrome 安装事件触发！');
       if (banner) banner.style.display = 'flex';
+      if (btnInstall) btnInstall.textContent = '安装到桌面';
     });
 
     window.addEventListener('appinstalled', function () {
-      dlog('✅', '安装成功！');
+      dlog('✅', 'PWA 安装成功！');
+      if (banner) banner.style.display = 'none';
     });
 
-    // 安装按钮
+    /* ---- 统一安装按钮 ---- */
     if (btnInstall) {
       btnInstall.addEventListener('click', function () {
-        if (!deferredPrompt) {
-          dlog('ℹ️', 'deferredPrompt 未触发');
-          alert('暂未满足自动安装条件。\n\n请尝试:\n1. 清除浏览器缓存\n2. 等几分钟刷新\n3. Chrome 菜单→添加到主屏幕');
-          return;
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function (result) {
+            dlog('📝', '用户选择: ' + result.outcome);
+            deferredPrompt = null;
+          });
+        } else {
+          dlog('💡', '手动安装提示');
+          alert('请点浏览器右上角 ⋮（三个点）\n→ 选择「安装应用」或「添加到主屏幕」');
         }
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function (result) {
-          dlog('📝', '用户选择: ' + result.outcome);
-          if (result.outcome === 'accepted') {
-            if (banner) banner.style.display = 'none';
-          }
-          deferredPrompt = null;
-        });
       });
     }
 
-    // 关闭按钮
+    /* ---- 关闭按钮 ---- */
     if (btnClose && banner) {
       btnClose.addEventListener('click', function () {
         banner.style.display = 'none';
       });
     }
 
-    // iOS
+    /* ---- iOS ---- */
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     if (isIOS && !navigator.standalone && banner) {
-      dlog('🍎', 'iOS 设备');
+      dlog('🍎', 'iOS');
       banner.style.display = 'flex';
-      if (btnInstall) {
-        btnInstall.textContent = '如何安装';
-        btnInstall.addEventListener('click', function () {
-          alert('1. 点底部 Safari 分享按钮\n2. 滑动找到「添加到主屏幕」\n3. 点右上角「添加」');
-        });
-      }
+      if (btnInstall) btnInstall.textContent = '如何安装';
     }
 
-    // 3 秒后如果还没触发 beforeinstallprompt
+    /* ---- 主动显示安装条 ---- */
     setTimeout(function () {
-      dlog('⏳', '3秒检测完毕。如无 🎉 则未触发安装事件');
+      dlog('⏳', '3秒结果: ' + (deferredPrompt ? '可安装!' : '未触发安装事件'));
       if (!deferredPrompt && banner && banner.style.display === 'none' &&
           !window.matchMedia('(display-mode: standalone)').matches) {
         banner.style.display = 'flex';
-        if (btnInstall) {
-          btnInstall.textContent = '安装';
-          btnInstall.onclick = function () {
-            alert('请通过浏览器菜单安装:\n\nChrome: 点右上 ⋮ → 添加到主屏幕\n华为浏览器: 点底部中间 ≡ → 添加至桌面');
-          };
-        }
+        if (btnInstall) btnInstall.textContent = '安装';
+        dlog('💡', '尝试点 ⋮ → "安装应用"');
       }
     }, 3000);
   }
 
-  /**
-   * 注册 Service Worker
-   */
+  /* ---- Service Worker ---- */
   function registerSW() {
-    if (!('serviceWorker' in navigator)) {
-      console.log('[App] 浏览器不支持 Service Worker');
-      return;
-    }
-
+    if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker.register('./sw.js')
       .then(function (reg) {
-        console.log('[App] Service Worker 已注册: ' + reg.scope);
-
+        console.log('[App] SW 已注册: ' + reg.scope);
         reg.addEventListener('updatefound', function () {
           var newWorker = reg.installing;
           newWorker.addEventListener('statechange', function () {
@@ -320,33 +251,28 @@ var App = (function () {
         });
       })
       .catch(function (err) {
-        console.error('[App] Service Worker 注册失败:', err);
+        console.error('[App] SW 注册失败:', err);
       });
   }
 
-  /**
-   * 应用入口
-   */
+  /* ---- 入口 ---- */
   function init() {
     bindNavigation();
-
     DB.init()
       .then(function () {
-        console.log('[App] 数据库就绪');
+        console.log('[App] DB 就绪');
         return DB.getAll('schools');
       })
       .then(function (schools) {
-        console.log('[App] 已加载 ' + schools.length + ' 所院校');
+        console.log('[App] ' + schools.length + ' 所院校');
         initModules();
       })
       .catch(function (err) {
-        console.error('[App] 数据库初始化失败:', err);
+        console.error('[App] DB 初始化失败:', err);
       });
-
     registerSW();
     initPWAInstall();
-
-    console.log('[App] 应用初始化完成');
+    console.log('[App] 初始化完成');
   }
 
   if (document.readyState === 'loading') {
@@ -355,7 +281,7 @@ var App = (function () {
     init();
   }
 
-  /* ---- 工具函数 ---- */
+  /* ---- 工具 ---- */
   function escapeHTML(str) {
     var div = document.createElement('div');
     div.textContent = str;
@@ -369,7 +295,6 @@ var App = (function () {
       String(d.getDate()).padStart(2, '0');
   }
 
-  /* ---- 公开 API ---- */
   return {
     switchTab: switchTab,
     refreshHome: refreshHome
