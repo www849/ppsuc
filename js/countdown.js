@@ -128,6 +128,10 @@ var Countdown = (function () {
     return DB.getSetting('examDate').then(function (date) {
       if (date) {
         examDate = date;
+      } else {
+        // 默认大三备考 → 2027年12月底考研
+        examDate = '2027-12-27';
+        DB.setSetting('examDate', examDate).catch(function () {});
       }
       render();
       scheduleDailyRefresh();
