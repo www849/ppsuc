@@ -3,7 +3,7 @@
  * 缓存优先策略（Cache-First），确保离线可用
  */
 
-var CACHE_NAME = 'ppsuc-v1';
+var CACHE_NAME = 'ppsuc-v2';
 var STATIC_FILES = [
   './',
   './index.html',
