@@ -112,8 +112,12 @@ var App = (function () {
     if (typeof Notifications !== 'undefined' && Notifications.init) Notifications.init();
     if (typeof Checkin !== 'undefined' && Checkin.init) Checkin.init();
     if (typeof Photos !== 'undefined' && Photos.init) Photos.init();
+    if (typeof SummerSchedule !== 'undefined' && SummerSchedule.init) SummerSchedule.init();
     refreshHome();
-    document.querySelector('.nav-item[data-tab="home"]').addEventListener('click', refreshHome);
+    document.querySelector('.nav-item[data-tab="home"]').addEventListener('click', function () {
+      refreshHome();
+      if (typeof SummerSchedule !== 'undefined' && SummerSchedule.refresh) SummerSchedule.refresh();
+    });
   }
 
   /* ================================================================

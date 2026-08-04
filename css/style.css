@@ -1162,6 +1162,32 @@ body {
   }
 }
 
+/* ----- 暑假作息表 ----- */
+#summer-card {
+  border: 1px solid rgba(197, 165, 90, 0.15);
+}
+
+#summer-card .card-title {
+  margin-bottom: 8px;
+}
+
+.summer-timeline {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.summer-row {
+  transition: all 300ms ease;
+}
+
+.summer-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.summer-toggle:active {
+  transform: scale(0.95);
+}
+
 /* ----- 滚动条 ----- */
 ::-webkit-scrollbar {
   width: 4px;
