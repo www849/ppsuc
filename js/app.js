@@ -119,9 +119,12 @@ var App = (function () {
       refreshHome();
       if (typeof SummerSchedule !== 'undefined' && SummerSchedule.refresh) SummerSchedule.refresh();
     });
-    document.querySelector('.nav-item[data-tab="prep"]').addEventListener('click', function () {
-      if (typeof ExamPrep !== 'undefined' && ExamPrep.refresh) ExamPrep.refresh();
-    });
+    var prepNav = document.querySelector('.nav-item[data-tab="prep"]');
+    if (prepNav) {
+      prepNav.addEventListener('click', function () {
+        if (typeof ExamPrep !== 'undefined' && ExamPrep.refresh) ExamPrep.refresh();
+      });
+    }
   }
 
   /* ================================================================
