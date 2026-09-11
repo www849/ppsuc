@@ -1,13 +1,13 @@
 /**
  * 警校考研助手 — IndexedDB 数据库层
- * 数据库名: ppsuc_db, 版本: 2
- * 包含 5 个 Object Store: schools, studyPlans, checkins, settings, photos
+ * 数据库名: ppsuc_db, 版本: 3
+ * 包含 6 个 Object Store: schools, studyPlans, checkins, settings, photos, studyLogs
  */
 var DB = (function () {
   'use strict';
 
   var DB_NAME    = 'ppsuc_db';
-  var DB_VERSION = 2;
+  var DB_VERSION = 3;
 
   var db = null;
 
@@ -62,6 +62,16 @@ var DB = (function () {
             autoIncrement: true
           });
           photosStore.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+
+        // --- studyLogs store (v3) ---
+        if (!database.objectStoreNames.contains('studyLogs')) {
+          var logsStore = database.createObjectStore('studyLogs', {
+            keyPath: 'id',
+            autoIncrement: true
+          });
+          logsStore.createIndex('createdAt', 'createdAt', { unique: false });
+          logsStore.createIndex('tag', 'tag', { unique: false });
         }
       };
 

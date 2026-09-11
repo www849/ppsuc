@@ -1199,3 +1199,243 @@ body {
   background: rgba(197, 165, 90, 0.2);
   border-radius: 2px;
 }
+
+/* ============================================================
+   备考日历 + 学习日志（模块⑤）
+   ============================================================ */
+
+/* ----- 版本标记 ----- */
+.version-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-gold);
+  border: 1px solid rgba(197, 165, 90, 0.4);
+  border-radius: 4px;
+  padding: 1px 6px;
+  vertical-align: middle;
+  letter-spacing: 0.5px;
+}
+
+/* ----- 重要日程里程碑 ----- */
+.prep-milestone {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.prep-milestone:last-child {
+  border-bottom: none;
+}
+
+.prep-milestone-icon {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.prep-milestone-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.prep-milestone-title {
+  font-size: var(--font-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prep-milestone-sub {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.prep-milestone-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.prep-milestone-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.prep-days {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-gold);
+  line-height: 1;
+}
+
+.prep-days-unit {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.prep-days.past {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ----- 复习计划 ----- */
+.prep-plan-group {
+  margin-bottom: 14px;
+}
+.prep-plan-group:last-child {
+  margin-bottom: 0;
+}
+
+.prep-plan-group-title {
+  font-size: var(--font-h3);
+  font-weight: 600;
+  color: var(--color-gold);
+  margin-bottom: 8px;
+}
+
+.prep-stage {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.prep-stage-no {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-gold-bg);
+  border: 1px solid rgba(197, 165, 90, 0.4);
+  color: var(--color-gold);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.prep-stage-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.prep-stage-name {
+  font-size: var(--font-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prep-stage-detail {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+/* ----- 学习日志 ----- */
+#log-tag-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.log-tag {
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--font-caption);
+  cursor: pointer;
+  transition: all 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.log-tag.active {
+  color: var(--color-gold);
+  border-color: rgba(197, 165, 90, 0.5);
+  background: var(--color-gold-bg);
+}
+
+.log-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-btn);
+  color: var(--text-primary);
+  font-size: var(--font-body);
+  font-family: var(--font-family);
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+}
+
+.log-input:focus {
+  border-color: rgba(197, 165, 90, 0.5);
+}
+
+.log-input::placeholder {
+  color: var(--text-muted);
+}
+
+.log-entry {
+  position: relative;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(197, 165, 90, 0.5);
+  border-radius: 0 var(--radius-btn) var(--radius-btn) 0;
+}
+
+.log-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.log-entry-tag {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(197, 165, 90, 0.35);
+  color: var(--color-gold);
+  background: var(--color-gold-bg);
+}
+
+.log-entry-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.log-entry-content {
+  font-size: var(--font-body);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  word-break: break-word;
+  padding-right: 36px;
+}
+
+.log-entry-del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.log-entry-del:active {
+  color: var(--color-danger);
+}

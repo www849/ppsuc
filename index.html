@@ -15,7 +15,7 @@
   <!-- ===== 应用头部 ===== -->
   <header class="app-header">
     <img class="app-badge" src="assets/badge.png" alt="警徽" onerror="this.style.display='none'">
-    <h1 class="app-title">警校考研助手</h1>
+    <h1 class="app-title">警校考研助手 <span class="version-tag">v3</span></h1>
     <p class="app-subtitle">忠诚 · 求实 · 勤奋 · 创新</p>
   </header>
 
@@ -136,6 +136,57 @@
       </div>
     </section>
 
+    <!-- 备考 Tab -->
+    <section class="tab-panel" id="panel-prep">
+      <div class="page-header">
+        <h2 class="page-title">备考日历</h2>
+      </div>
+
+      <!-- 重要日程 -->
+      <div class="card">
+        <h2 class="card-title">📅 重要日程</h2>
+        <div id="prep-milestones">
+          <p class="card-hint">加载中…</p>
+        </div>
+      </div>
+
+      <!-- 复习计划 -->
+      <div class="card">
+        <h2 class="card-title">📋 复习计划</h2>
+        <div id="prep-plans">
+          <p class="card-hint">加载中…</p>
+        </div>
+      </div>
+
+      <!-- 学习日志 -->
+      <div class="card">
+        <h2 class="card-title">✍️ 学习日志</h2>
+        <div id="log-tag-row">
+          <button class="log-tag active" data-tag="cet4">四级</button>
+          <button class="log-tag" data-tag="modeling">建模</button>
+          <button class="log-tag" data-tag="kaoyan">考研</button>
+          <button class="log-tag" data-tag="other">其他</button>
+        </div>
+        <textarea id="log-content" class="log-input" rows="3" placeholder="记录今天的学习收获、遇到的问题、心情…"></textarea>
+        <button class="btn-gold primary" id="btn-log-save" style="width:100%;margin-top:8px;">保存日志</button>
+        <div id="prep-log-list"></div>
+      </div>
+    </section>
+
+    <!-- 学习历程 Tab -->
+    <section class="tab-panel" id="panel-photos">
+      <div class="page-header">
+        <h2 class="page-title">学习历程</h2>
+      </div>
+      <div class="photos-grid" id="photos-grid">
+        <p class="card-hint" style="text-align:center;padding:40px 0;">加载中…</p>
+      </div>
+      <label class="btn-gold primary upload-btn" for="photo-file-input" style="margin-top:12px;">
+        📷 拍照 / 从相册选择
+        <input type="file" id="photo-file-input" accept="image/*">
+      </label>
+    </section>
+
   </main>
 
   <!-- ===== 底部导航栏 ===== -->
@@ -156,27 +207,15 @@
       <span class="nav-icon">📋</span>
       <span class="nav-label">计划</span>
     </button>
+    <button class="nav-item" data-tab="prep">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">备考</span>
+    </button>
     <button class="nav-item" data-tab="photos">
       <span class="nav-icon">📸</span>
       <span class="nav-label">历程</span>
     </button>
   </nav>
-
-    <!-- 学习历程 Tab -->
-    <section class="tab-panel" id="panel-photos">
-      <div class="page-header">
-        <h2 class="page-title">学习历程</h2>
-      </div>
-      <div class="photos-grid" id="photos-grid">
-        <p class="card-hint" style="text-align:center;padding:40px 0;">加载中…</p>
-      </div>
-      <label class="btn-gold primary upload-btn" for="photo-file-input" style="margin-top:12px;">
-        📷 拍照 / 从相册选择
-        <input type="file" id="photo-file-input" accept="image/*">
-      </label>
-    </section>
-
-  </main>
 
   <!-- ===== 图片查看器 ===== -->
   <div class="viewer-overlay" id="photo-viewer">
@@ -234,6 +273,7 @@
   <script src="js/checkin.js"></script>
   <script src="js/photos.js"></script>
   <script src="js/summer-schedule.js"></script>
+  <script src="js/exam-prep.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

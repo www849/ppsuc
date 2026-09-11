@@ -113,10 +113,14 @@ var App = (function () {
     if (typeof Checkin !== 'undefined' && Checkin.init) Checkin.init();
     if (typeof Photos !== 'undefined' && Photos.init) Photos.init();
     if (typeof SummerSchedule !== 'undefined' && SummerSchedule.init) SummerSchedule.init();
+    if (typeof ExamPrep !== 'undefined' && ExamPrep.init) ExamPrep.init();
     refreshHome();
     document.querySelector('.nav-item[data-tab="home"]').addEventListener('click', function () {
       refreshHome();
       if (typeof SummerSchedule !== 'undefined' && SummerSchedule.refresh) SummerSchedule.refresh();
+    });
+    document.querySelector('.nav-item[data-tab="prep"]').addEventListener('click', function () {
+      if (typeof ExamPrep !== 'undefined' && ExamPrep.refresh) ExamPrep.refresh();
     });
   }
 

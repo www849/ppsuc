@@ -3,7 +3,7 @@
  * 缓存优先策略（Cache-First），确保离线可用
  */
 
-var CACHE_NAME = 'ppsuc-v2';
+var CACHE_NAME = 'ppsuc-v3';
 var STATIC_FILES = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ var STATIC_FILES = [
   './js/checkin.js',
   './js/photos.js',
   './js/summer-schedule.js',
+  './js/exam-prep.js',
   './assets/badge.png',
   './assets/icon-192.png',
   './assets/icon-512.png'
@@ -57,15 +58,28 @@ self.addEventListener('activate', function (event) {
   self.clients.claim();
 });
 
-/* ---- 请求拦截：缓存优先 ---- */
+/* ---- 请求拦截 ---- */
 self.addEventListener('fetch', function (event) {
   // 只处理 GET 请求
   if (event.request.method !== 'GET') return;
 
-  // 跳过 IndexedDB 相关请求
+  // 跳过浏览器扩展请求
   var url = event.request.url;
   if (url.indexOf('chrome-extension') !== -1) return;
 
+  // 页面导航：网络优先，保证每次打开都是最新版本（离线时回退缓存）
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then(function (response) {
+        return response;
+      }).catch(function () {
+        return caches.match('./index.html');
+      })
+    );
+    return;
+  }
+
+  // 静态资源：缓存优先
   event.respondWith(
     caches.match(event.request).then(function (cached) {
       if (cached) {
@@ -87,11 +101,7 @@ self.addEventListener('fetch', function (event) {
 
         return response;
       }).catch(function () {
-        // 网络失败，返回离线页面（仅对导航请求）
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-        // 其他请求静默失败
+        // 网络失败，静默放弃
       });
     })
   );
