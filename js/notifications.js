@@ -1,12 +1,17 @@
 /**
  * 警校考研助手 — 通知提醒调度
  * 请求通知权限，每 60 秒检查到期计划并弹出系统通知
+ * 同时支持固定学习时段锁屏通知（8:00 / 13:30 / 19:00）
  */
 var Notifications = (function () {
   'use strict';
 
   var checkIntervalId = null;
   var lastNotifyDate  = {};  // 记录每个计划上次通知日期，避免同一天重复通知
+
+  /* ---- 固定学习时段（锁屏通知） ---- */
+  var STUDY_TIMES = ['08:00', '13:30', '19:00'];
+  var lastStudyNotify = {};  // { '08:00': 'Tue Oct 21 2026' } 每时段每天只提醒一次
 
   /**
    * 请求通知权限
@@ -50,9 +55,7 @@ var Notifications = (function () {
         vibrate: [200, 100, 200]
       });
 
-      // 5 秒后自动关闭
-      setTimeout(function () { n.close(); }, 8000);
-
+      // 不自动关闭：留在锁屏和通知栏，直到用户点开或划掉
       n.onclick = function () {
         window.focus();
         n.close();
@@ -116,6 +119,29 @@ var Notifications = (function () {
   }
 
   /**
+   * 固定学习时段锁屏通知（8:00 / 13:30 / 19:00）
+   * 到点自动弹系统通知：锁屏可见 + 响铃 + 振动，点通知打开 App
+   */
+  function checkStudyTimes() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    var now = new Date();
+    var currentTime =
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0');
+
+    if (STUDY_TIMES.indexOf(currentTime) === -1) return;
+    if (lastStudyNotify[currentTime] === now.toDateString()) return;
+    lastStudyNotify[currentTime] = now.toDateString();
+
+    showNotification(
+      '📚 该学习了！',
+      '学习时间到了，点我打开 App 开始学习'
+    );
+  }
+
+  /**
    * 启动定时检查
    */
   function startChecking() {
@@ -123,9 +149,13 @@ var Notifications = (function () {
 
     // 首次立即检查一次
     checkDuePlans();
+    checkStudyTimes();
 
     // 每 60 秒检查一次
-    checkIntervalId = setInterval(checkDuePlans, 60000);
+    checkIntervalId = setInterval(function () {
+      checkDuePlans();
+      checkStudyTimes();
+    }, 60000);
 
     console.log('[Notify] 定时检查已启动（每 60 秒）');
   }
