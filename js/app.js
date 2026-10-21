@@ -114,6 +114,7 @@ var App = (function () {
     if (typeof Photos !== 'undefined' && Photos.init) Photos.init();
     if (typeof SummerSchedule !== 'undefined' && SummerSchedule.init) SummerSchedule.init();
     if (typeof ExamPrep !== 'undefined' && ExamPrep.init) ExamPrep.init();
+    if (typeof UnlockReminder !== 'undefined' && UnlockReminder.init) UnlockReminder.init();
     refreshHome();
     document.querySelector('.nav-item[data-tab="home"]').addEventListener('click', function () {
       refreshHome();

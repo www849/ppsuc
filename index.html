@@ -15,7 +15,7 @@
   <!-- ===== 应用头部 ===== -->
   <header class="app-header">
     <img class="app-badge" src="assets/badge.png" alt="警徽" onerror="this.style.display='none'">
-    <h1 class="app-title">警校考研助手 <span class="version-tag">v3</span></h1>
+    <h1 class="app-title">警校考研助手 <span class="version-tag">v4</span></h1>
     <p class="app-subtitle">忠诚 · 求实 · 勤奋 · 创新</p>
   </header>
 
@@ -62,6 +62,17 @@
           <h2 class="card-title">☀️ 暑假作息表</h2>
           <div id="summer-schedule">
             <p class="card-hint">加载中…</p>
+          </div>
+        </div>
+
+        <!-- 解锁学习提醒开关 -->
+        <div class="card">
+          <div class="unlock-card-row">
+            <div class="unlock-card-info">
+              <h2 class="card-title" style="margin-bottom:2px;">🔔 解锁学习提醒</h2>
+              <p class="card-hint" id="unlock-status">离开屏幕 5 分钟后回来会响铃提醒学习</p>
+            </div>
+            <button class="unlock-toggle" id="unlock-toggle" aria-label="解锁提醒开关">🟢</button>
           </div>
         </div>
 
@@ -274,6 +285,7 @@
   <script src="js/photos.js"></script>
   <script src="js/summer-schedule.js"></script>
   <script src="js/exam-prep.js"></script>
+  <script src="js/unlock-reminder.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

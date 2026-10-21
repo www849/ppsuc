@@ -1201,6 +1201,39 @@ body {
 }
 
 /* ============================================================
+   解锁学习提醒（模块⑥）
+   ============================================================ */
+
+.unlock-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.unlock-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.unlock-toggle {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(197, 165, 90, 0.4);
+  background: var(--color-gold-bg);
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.unlock-toggle:active {
+  transform: scale(0.92);
+}
+
+/* ============================================================
    备考日历 + 学习日志（模块⑤）
    ============================================================ */
 
